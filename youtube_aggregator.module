@@ -107,7 +107,6 @@ function youtube_aggregator_theme() {
  
     'aggregator_item' => array(
       'variables' => array('item' => NULL),
-      'file' => 'youtube_aggregator_pages.inc',
       'template' => 'youtube_aggregator_aggregator-item',
     ),
 
