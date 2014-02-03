@@ -1,0 +1,36 @@
+<?php
+function youtube_aggregator_install() {
+ $schema = drupal_get_schema('aggregator_item');
+  db_add_field('aggregator_item', 'test_field', $schema['fields']['test_field']);
+ $schema = drupal_get_schema('aggregator_feed');
+  db_add_field('aggregator_feed', 'feed_custom_proc', $schema['fields']['feed_custom_proc']);
+
+
+}
+
+
+function youtube_aggregator_schema_alter(&$schema) {
+  $schema['aggregator_item']['fields']['test_field'] = array(
+	'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Afegit per modul',
+  );
+
+  $schema['aggregator_feed']['fields']['feed_custom_proc'] = array(
+	'type' => 'int',        
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Afegit per modul',
+  );
+
+}
+
+
+function youtube_aggregator_uninstall() {
+ $schema = drupal_get_schema('aggregator_item');
+  db_drop_field('aggregator_item', 'test_field');
+ $schema = drupal_get_schema('aggregator_feed');
+  db_drop_field('aggregator_feed', 'feed_custom_proc');
+}

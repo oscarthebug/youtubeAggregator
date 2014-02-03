@@ -1,0 +1,136 @@
+<?php
+
+function user_feed($form,&$form_state){
+return $form['url'];
+}
+function playlist_feed($form,&$form_state){
+return $form['url'];
+}
+
+function youtube_aggregator_form_aggregator_form_feed_alter(&$form, &$form_state) {
+
+
+
+ dsm($form);
+dsm($form_state);
+if (isset($form_state['build_info']['args'][0]->feed_custom_proc) &&  $form_state['build_info']['args'][0]->feed_custom_proc <> 0  ){
+
+   unset($form_state['input']['url']);
+if(!isset($form_state['values']['url'])) {$val =  'User or channel id'; if(isset($form['fid'])){$val = $form['url']['#default_value'];   }} 
+elseif($form_state['clicked_button']['#value'] == 'Youtube user' ){$tmpval = 'http://gdata.youtube.com/feeds/base/users/' . $form_state['values']['url'] . '/uploads'; $val = $tmpval; }
+elseif($form_state['clicked_button']['#value'] == 'Youtube playlist' ){$tmpval = 'http://gdata.youtube.com/feeds/base/playlist?list=' . $form_state['values']['url']; $val = $tmpval; }
+
+$form['url'] = array('#type' => 'textfield',
+    '#title' => NULL,
+ '#default_value' => $val,
+    '#maxlength' => NULL,
+  '#description' => t('1.Insert only the user`s or channel`s ID. 2. Click the corresponding button to add the feed url. 3. Submit '),
+    '#required' => TRUE,
+'#prefix' => '<div id="edit-url-div">',
+  '#suffix' => '</div>',
+  );
+
+$form['type1'] = array(
+  '#type' =>'button', 
+  '#weight' => 0.0011,
+'#value' => t('Youtube playlist'), 
+  '#ajax' => array(
+      'callback' => 'user_feed',                  
+      'wrapper' => 'edit-url-div',  
+    ),
+);
+
+$form['type2'] = array(
+
+  '#type' =>'button', 
+  '#value' => t('Youtube user'), 
+  '#weight' => 0.001,
+ '#ajax' => array(
+      'callback' => 'playlist_feed',             
+      'wrapper' => 'edit-url-div',     
+    ),
+);
+}
+}
+
+
+function youtube_aggregator_aggregator_process($feed) {
+
+ $id = intval($feed->fid);
+$result = db_query('SELECT feed_custom_proc FROM {aggregator_feed} WHERE fid = :fid',array(':fid' => $feed->fid));
+
+if($result->FetchColumn(0) <> 0){
+ foreach ($feed->items as $item) {
+if($item['title']){
+$vid_id = explode("?v=", $item['link']);
+
+if( $vid_id[1]){
+$vid_id = explode("&", $vid_id[1]);
+$vid_id = $vid_id[0];
+}
+
+ $item = db_update('aggregator_item')
+      ->fields(array(
+ 
+	'test_field' => $vid_id,
+      ))
+	->condition('guid', $item['guid'])
+      ->execute();
+}}}}
+
+
+/**
+ * Implements hook_menu().
+ */
+function youtube_aggregator_menu() {
+
+  $items['admin/config/services/aggregator/youtube_aggregator'] = array(
+    'title' => 'youtube_aggregator',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('youtube_aggregator_form_feed'),
+    'access arguments' => array('administer news feeds'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'youtube_aggregator_admin.inc',
+  );
+ return $items;
+}
+
+/*function youtube_aggregator_template_preprocess_aggregator_item(){
+dsm("heeellooo");
+print "hellooooo";
+}*/
+
+function youtube_aggregator_theme() {
+
+
+  return array(
+ 
+    'aggregator_item' => array(
+      'variables' => array('item' => NULL),
+      'file' => 'youtube_aggregator_pages.inc',
+      'template' => 'youtube_aggregator_aggregator-item',
+    ),
+
+  );
+}
+
+
+
+/**
+* Implements hook_theme_registry_alter().
+
+function youtube_aggregator_theme_registry_alter(&$theme_registry) {
+  // Defined path to current module.
+  $module_path = drupal_get_path('module', 'youtube_aggregator');
+  // Find all .tpl.php files in this module's folder recursively.
+  $template_file_objects = drupal_find_theme_templates($theme_registry, '.tpl.php', $module_path);
+  // Itterate through all found template file objects.
+  foreach ($template_file_objects as $key => $template_file_object) {
+    // If the template has not already been overridden by a theme.
+    if (!preg_match('#/themes/#', $theme_registry[$key]['theme path'])) {
+      // Alter the theme path and template elements.
+      $theme_registry[$key]['theme path'] = $module_path;
+      $theme_registry[$key] = array_merge($theme_registry[$key], $template_file_object);
+    }
+  }
+}*/

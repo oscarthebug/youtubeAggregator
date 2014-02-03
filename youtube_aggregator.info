@@ -1,0 +1,8 @@
+name = youtube_aggregator
+description = Youtube feeds
+dependencies[] = aggregator
+package = Youtube_feeds
+core = 7.x
+
+
+
